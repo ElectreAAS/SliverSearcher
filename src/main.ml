@@ -62,4 +62,5 @@ let () =
   bench (module Searcher.Naive);
   bench (module Searcher.Opti);
   bench (module Searcher.KMP);
+  bench (module Searcher.BMH);
   close_out oc

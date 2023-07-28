@@ -23,7 +23,10 @@ let v (module S : Searcher.S) =
 
 let test_suite =
   [
-    v (module Searcher.KMP); v (module Searcher.Opti); v (module Searcher.Naive);
+    v (module Searcher.KMP);
+    v (module Searcher.Opti);
+    v (module Searcher.Naive);
+    v (module Searcher.BMH);
   ]
 
 let () = Alcotest.run "All" test_suite

@@ -20,6 +20,7 @@ set style boxplot outliers pointtype 7
 
 # Create a custom boxplot
 plot \
-    datafile using (1):2:(0.5):1 index 0 title "Naive", \
-    datafile using (1):2:(0.5):1 index 1 title "Opti", \
-    datafile using (1):2:(0.5):1 index 2 title "KMP"
+    datafile using (1):2:(0.5):1 index 3 title "BMH", \
+    datafile using (1):2:(0.5):1 index 2 title "KMP", \
+#    datafile using (1):2:(0.5):1 index 1 title "Opti", \
+#    datafile using (1):2:(0.5):1 index 0 title "Naive"

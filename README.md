@@ -6,7 +6,7 @@ Implemented algorithms:
 - A naive one for comparison
 - A slightly optimized version of the naive one
 - [Knuth-Morris-Pratt](https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm)
+- [Boyer-Moore](https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore_string-search_algorithm) (Only in simplified version with only one shift rule)
 
 TODO:
-- [Boyer-Moore](https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore_string-search_algorithm)
 - [Two-way](https://en.wikipedia.org/wiki/Two-way_string-matching_algorithm)
