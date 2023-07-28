@@ -1,0 +1,3 @@
+(executable
+ (name main)
+ (libraries searcher mtime mtime.clock.os))
