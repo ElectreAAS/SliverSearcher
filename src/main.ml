@@ -30,9 +30,9 @@ let bench_worst_case (module M : Searcher.S) ~iter ~max ~text_size =
       Format.printf "Entering loop of size %d (max is %d) for %s@." p max M.name;
       let timers =
         Array.init iter (fun _ ->
-            let pat, text = gen_determinist p text_size in
+            let needle, haystack = gen_determinist p text_size in
             let counter = Mtime_clock.counter () in
-            ignore @@ Sys.opaque_identity (M.search ~pat text);
+            ignore @@ Sys.opaque_identity (M.search ~needle ~haystack);
             let span =
               (Mtime_clock.count counter |> Mtime.Span.to_float_ns) /. 1e3
             in
