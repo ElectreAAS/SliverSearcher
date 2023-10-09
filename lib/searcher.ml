@@ -1,72 +1,9 @@
+module PP = Preprocess
+
 module type S = sig
   val search : needle:string -> haystack:string -> int option
   val name : string
 end
-
-let partial_match_table needle =
-  let n = String.length needle in
-  let table = Array.make n 0 in
-  let rec loop len i =
-    if i < n then
-      if needle.[i] = needle.[len] then (
-        table.(i) <- len + 1;
-        loop (len + 1) (i + 1))
-      else if len = 0 then (
-        table.(i) <- 0;
-        loop len (i + 1))
-      else loop table.(len - 1) i
-  in
-  loop 0 1;
-  table
-
-let bad_char_table needle =
-  let n = String.length needle in
-  let bad_char = Array.make 256 None in
-  for i = 0 to n - 2 do
-    let c = Char.code needle.[i] in
-    bad_char.(c) <- Some i
-  done;
-  bad_char
-
-(** Is [needle.\[i..\]] a prefix of needle? *)
-let is_prefix needle i =
-  let open String in
-  let prefix = sub needle i (length needle - i) in
-  starts_with ~prefix needle
-
-(** If there is a substring [needle.\[x..i\]] that is also a suffix of [needle],
-    what is the maximum length [i-x]? *)
-let suffix_length needle i =
-  let n = String.length needle in
-  assert (i >= 0 && i < n);
-  if i = n - 1 then Some n
-  else if needle.[i] <> needle.[n - 1] then None
-  else
-    let rec loop j =
-      if i - j < 0 then i + 1
-      else if needle.[i - j] = needle.[n - 1 - j] then loop (succ j)
-      else j
-    in
-    Some (loop 1)
-
-let good_suffix_table needle =
-  let n = String.length needle in
-  let table = Array.make n n in
-  let last_prefix = ref None in
-  (* First loop, assumes result of second loop doesn't get erased *)
-  for i = n - 1 downto 0 do
-    Option.iter (fun pref -> table.(i) <- pref) !last_prefix;
-    if is_prefix needle i then last_prefix := Some i
-  done;
-  (* Second loop: TODO explain *)
-  for i = 0 to n - 2 do
-    match suffix_length needle i with
-    | None -> ()
-    | Some suf_len ->
-        let table_i = n - 1 - suf_len in
-        table.(table_i) <- n - i - 1
-  done;
-  table
 
 module KMP : S = struct
   let name = "Knuth-Morris-Pratt"
@@ -74,7 +11,7 @@ module KMP : S = struct
   let search ~needle ~haystack =
     let n = String.length needle in
     let h = String.length haystack in
-    let partial_match = partial_match_table needle in
+    let partial_match = PP.partial_match_table needle in
     let rec loop x y =
       if h - x < n - y then None
       else if y = n then Some (x - y)
@@ -125,7 +62,7 @@ module BMH : S = struct
   let search ~needle ~haystack =
     let n = String.length needle in
     let h = String.length haystack in
-    let bad_char = bad_char_table needle in
+    let bad_char = PP.bad_char_table needle in
     let rec loop x y =
       if y < 0 then Some x
       else if x + y >= h then None
@@ -150,8 +87,8 @@ module BM : S = struct
   let search ~needle ~haystack =
     let n = String.length needle in
     let h = String.length haystack in
-    let bc_table = bad_char_table needle in
-    let gs_table = good_suffix_table needle in
+    let bc_table = PP.bad_char_table needle in
+    let gs_table = PP.good_suffix_table needle in
     let rec loop x y =
       if y < 0 then Some x
       else if x + y >= h then None
