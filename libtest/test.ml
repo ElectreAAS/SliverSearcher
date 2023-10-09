@@ -44,27 +44,24 @@ let manuals =
   ("Manual tests", on_all_modules manual)
 
 let qcheckers =
-  let char_gen = QCheck2.Gen.oneofl [ 'a'; 'b'; 'c' ] in
+  let char_gen = QCheck2.Gen.oneofl [ 'a'; 'b'; 'c'; 'd' ] in
   let str_gen = QCheck2.Gen.(string_size ~gen:char_gen small_nat) in
+  let pair_gen =
+    QCheck2.Gen.(
+      let+ needle = str_gen and+ prefix = str_gen and+ suffix = str_gen in
+      let haystack = prefix ^ needle ^ suffix in
+      (needle, haystack))
+  in
   let qcheck (module S : Searcher.S) =
-    let total = ref 0 in
-    let found = ref 0 in
-    at_exit (fun () ->
-        Printf.printf "\n%s: %d / %d had the needle inside\n%!" S.name !found
-          !total);
     QCheck2.(
       Test.make ~count:1_000 ~name:S.name
         ~print:Print.(pair string string)
-        Gen.(pair str_gen str_gen)
+        pair_gen
         (fun (needle, haystack) ->
-          assume (String.length needle <= String.length haystack);
-          incr total;
           let re = Str.regexp_string needle in
           let stdlib =
             match Str.search_forward re haystack 0 with
-            | n ->
-                incr found;
-                Some n
+            | n -> Some n
             | exception Not_found -> None
           in
           S.search ~needle ~haystack = stdlib))
