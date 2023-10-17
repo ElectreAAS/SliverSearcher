@@ -1,10 +1,10 @@
-set term pngcairo size 800,600 enhanced font 'Verdana,12'
+set term pngcairo size 1920,1080 enhanced font 'Verdana,12'
 set output 'Graph.png'
 
 # Set the title and labels
 set title "String-search algorithm comparisons"
 set xlabel "Size"
-set ylabel "Time (µs)"
+set ylabel "Comparisons"
 
 # Define the box width and whisker settings
 box_width = 0.4
@@ -16,11 +16,20 @@ datafile = "search.dat"
 
 set style data boxplot
 set style fill solid 0.25 border -1
-set style boxplot outliers pointtype 7
+set style boxplot fraction 0.95
+set key autotitle columnhead
 
 # Create a custom boxplot
 plot \
-    datafile using (1):2:(0.5):1 index 3 title "BMH", \
-    datafile using (1):2:(0.5):1 index 2 title "KMP", \
+    for [col = 2:6] datafile using 1:col
+#    datafile using "Size":"Optimized", \
+#    datafile using "Size":"Knuth-Morris-Pratt", \
+#    datafile using "Size":"Boyer-Moore-Horspool", \
+#    datafile using "Size":"Boyer-Moore"
+
+# plot \
+#    datafile using (1):2:(0.5):1 index 4 title "BM", \
+#    datafile using (1):2:(0.5):1 index 3 title "BMH", \
+#    datafile using (1):2:(0.5):1 index 2 title "KMP", \
 #    datafile using (1):2:(0.5):1 index 1 title "Opti", \
 #    datafile using (1):2:(0.5):1 index 0 title "Naive"

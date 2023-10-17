@@ -1,12 +1,22 @@
+let algos : (module Searcher.S) array =
+  [|
+    (module Searcher.Naive);
+    (module Searcher.Opti);
+    (module Searcher.KMP);
+    (module Searcher.BMH);
+    (module Searcher.BM);
+  |]
+
 module ManualTests (S : Searcher.S) = struct
   let data =
     [|
+      ("example", "Here is a simple example", Some 17);
+      ("adb", "abdbabdbababadbdbdabdabad", Some 12);
       ("", "", Some 0);
       ("a", "", None);
       ("", "text", Some 0);
       ("aaaaba", "aaaacaaaaaa", None);
       ("cbcc", "aaaaabccbcc", Some 7);
-      ("ab", "aaba", Some 1);
       ("acc", "aaaabaaaaaacc", Some 10);
       ("aa", "acababaa", Some 6);
       ("hello", "hellholleheolhelloheheyhello", Some 13);
@@ -27,21 +37,12 @@ module ManualTests (S : Searcher.S) = struct
   let tests = (S.name, `Quick, test)
 end
 
-let on_all_modules (f : (module Searcher.S) -> unit Alcotest.test_case) =
-  [
-    f (module Searcher.Naive);
-    f (module Searcher.KMP);
-    f (module Searcher.Opti);
-    f (module Searcher.BMH);
-    f (module Searcher.BM);
-  ]
-
 let manuals =
   let manual (module S : Searcher.S) =
     let module T = ManualTests (S) in
     T.tests
   in
-  ("Manual tests", on_all_modules manual)
+  ("Manual tests", Array.to_list @@ Array.map manual algos)
 
 let qcheckers =
   let char_gen = QCheck2.Gen.oneofl [ 'a'; 'b'; 'c'; 'd' ] in
@@ -67,6 +68,32 @@ let qcheckers =
           S.search ~needle ~haystack = stdlib))
     |> QCheck_alcotest.to_alcotest
   in
-  ("Quickcheck", on_all_modules qcheck)
+  ("Quickcheck", Array.to_list @@ Array.map qcheck algos)
 
-let () = Alcotest.run "All" [ qcheckers; manuals ]
+module ExactTests = struct
+  let data =
+    [
+      ("hello", "xxxxhello", 6, 3, "BMH on trivial example");
+      ("hello", "xxxxxhello", 6, 3, "BMH on trivial example 2");
+      ("hello", "xxxxhello", 6, 4, "BM on trivial example");
+      ("hello", "xxxxxhello", 6, 4, "BM on trivial example 2");
+      ("aa", "abababababaa", 7, 3, "BMH on simple pattern");
+      ("aa", "abababababaa", 7, 4, "BM on simple pattern");
+      ("anampnam", "manpanampnama", 12, 4, "BM on wikipedia example");
+      ("example", "Here is a simple example.", 15, 4, "BM on Moore's example");
+      ("adb", "abdbabdbababadbdbdabdabad", 13, 4, "Slightly more repetitive");
+    ]
+end
+
+let exacts =
+  List.map
+    (fun (needle, haystack, count, index, name) ->
+      let (module M : Searcher.S) = algos.(index) in
+      Alcotest.test_case name `Quick @@ fun () ->
+      Alcotest.(check int)
+        "Count should be correct" count
+        (M.search_count ~needle ~haystack))
+    ExactTests.data
+
+let exacts = ("Exact comparisons", exacts)
+let () = Alcotest.run "All" [ qcheckers; manuals; exacts ]
